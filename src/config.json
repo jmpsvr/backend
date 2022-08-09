@@ -1,0 +1,25 @@
+{
+  "port": 8080,
+  "bodyLimit": "100mb",
+  "postgres": {
+    "host": "10.0.0.6",
+    "port": 5432,
+    "user": "postgres",
+    "password": "jmpsvr",
+    "database": "jmpsvr"
+  },
+  "jwt": {
+    "name": "authorization",
+    "secret": "123qwe%abc",
+    "age": 86400
+  },
+  "emqx": {
+    "host": "10.0.0.6",
+    "tcp_port": 1883,
+    "api_port": 18083,
+    "username": "admin",
+    "password": "public",
+    "super_username": "admin",
+    "super_password": "883511ca-0481-45da-a124-c9802e1a4eef"
+  }
+}
