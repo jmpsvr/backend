@@ -172,7 +172,6 @@ export default ({ config, db }) => {
 
   api.post('/setRoleInfo', auth({ config, db }), admin({ config, db }), (req, res) => {
     const { name, remark, permission } = req.body;
-    console.log(req.body);
     db.query('SELECT * FROM roles WHERE name = ${name}', { name }).then(row => {
       if(row.length === 0) {
         db.query('INSERT INTO roles (name, remark, permission) VALUES (${name}, ${remark}, ${permission})', { name, remark, permission: JSON.stringify(permission) }).then(row => {
