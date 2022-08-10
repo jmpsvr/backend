@@ -7,6 +7,44 @@ import { v4 as uuidv4 } from 'uuid';
 export default ({ config, db }) => {
   const api = Router();
 
+  const addUser = (username, password, callback) => {
+    axios.post(`http://${config.emqx.host}:${config.emqx.api_port}/api/v5/authentication/password_based:built_in_database/users`, {
+      user_id: username,
+      password,
+      is_superuser: false
+    }, {
+      auth: {
+        username: config.emqx.username,
+        password: config.emqx.password
+      }
+    }).then(res => {
+      if(res.status === 201) {
+        callback(res);
+      } else {
+        throw new Error(res?.statusText);
+      }
+    }).catch(err => {
+      console.error(err);
+    });
+  }
+
+  const delUser = (username, callback) => {
+    axios.delete(`http://${config.emqx.host}:${config.emqx.api_port}/api/v5/authentication/password_based:built_in_database/users/${username}`, {
+      auth: {
+        username: config.emqx.username,
+        password: config.emqx.password
+      }
+    }).then(res => {
+      if(res.status === 204) {
+        callback(res);
+      } else {
+        throw new Error(res?.statusText);
+      }
+    }).catch(err => {
+      console.error(err);
+    });
+  }
+
   api.post('/handshake', (req, res) => { // Only type === 1 uses this api
     const { mac } = req.body;
     // validate mac address
@@ -19,35 +57,14 @@ export default ({ config, db }) => {
           mac,
           conn: JSON.stringify({ username: mac, password: uuidv4() })
         }).then(row => {
-          // post to emqx
-
-          axios.post(`http://${config.emqx.host}:${config.emqx.api_port}/api/v5/authentication/password_based:built_in_database/users`, {
-            user_id: mac,
-            password,
-            is_superuser: false
-          }, {
-            auth: {
-              username: config.emqx.username,
-              password: config.emqx.password
-            }
-          }).then(result => {
-            if(result?.status === 201) {
-              res.json({
-                code: 0,
-                result: { id: row[0]?.id, username: mac, password },
-                message: 'Ok',
-                type: 'success'
-              });
-            } else {
-              // 奇奇怪怪的bug处理，目前还没遇到
-            }
-          }).catch(err => {
-            if(err.response?.status === 409) {
-              // 数据库不一致，用户已经在EMQX中存在
-            }
-            // console.log(err);
+          addUser(mac, password, () => {
+            res.json({
+              code: 0,
+              result: { id: row[0]?.id, username: mac, password },
+              message: 'Ok',
+              type: 'success'
+            });
           });
-
         });
       } else {
         res.json({
@@ -68,46 +85,116 @@ export default ({ config, db }) => {
   api.post('/setDeviceInfo', auth({ config, db }), admin({ config, db }), (req, res) => {
     const { id, name, type, area, conn, remark } = req.body;
     if(id) { // update
-      // 如果type=0更新emqx
-      db.query('UPDATE devices SET name = ${name}, type = ${type}, conn = ${conn}, area = ${area}, remark = ${remark} WHERE id = ${id}', {
-        id, name, type, conn, area, remark
-      }).then(row => {
+      if(type === 0) { // update emqx
+        db.query('SELECT conn FROM devices WHERE id = ${id}', { id }).then(row => {
+          const { username: username_old, password: password_old } = JSON.parse(row[0]?.conn);
+          const { username, password } = JSON.parse(conn);
+          if(username_old !== username || password_old !== password) {
+            delUser(username_old, () => {
+              addUser(username, password, () => {
+                db.query('UPDATE devices SET name = ${name}, type = ${type}, conn = ${conn}, area = ${area}, mac = ${mac}, remark = ${remark} WHERE id = ${id}', {
+                  id, name, type, conn, area, remark, mac: username
+                }).then(row => {
+                  res.json({
+                    code: 0,
+                    message: 'Ok',
+                    type: 'success'
+                  });
+                }).catch(err => {
+                  res.status(500).json({
+                    code: -5,
+                    message: err,
+                    type: 'error'
+                  });
+                });
+              });
+            });
+          } else {
+            db.query('UPDATE devices SET name = ${name}, type = ${type}, area = ${area}, remark = ${remark} WHERE id = ${id}', {
+              id, name, type, area, remark
+            }).then(row => {
+              res.json({
+                code: 0,
+                message: 'Ok',
+                type: 'success'
+              });
+            }).catch(err => {
+              res.status(500).json({
+                code: -5,
+                message: err,
+                type: 'error'
+              });
+            });
+          }
+        }).catch(err => {
+          res.status(500).json({
+            code: -5,
+            message: err,
+            type: 'error'
+          });
+        });
+      } else {
+        db.query('UPDATE devices SET name = ${name}, type = ${type}, conn = ${conn}, area = ${area}, remark = ${remark} WHERE id = ${id}', {
+          id, name, type, conn, area, remark
+        }).then(row => {
           res.json({
             code: 0,
             message: 'Ok',
             type: 'success'
           });
-      }).catch(err => {
-        res.status(500).json({
-          code: -5,
-          message: err,
-          type: 'error'
+        }).catch(err => {
+          res.status(500).json({
+            code: -5,
+            message: err,
+            type: 'error'
+          });
         });
-      });
+      }
     } else { // insert
-      // 如果type=0插入emqx
-      db.query('INSERT INTO devices (name, type, conn, area, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${remark})', {
-        name, type, conn, area, remark
-      }).then(row => {
-        res.json({
-          code: 0,
-          message: 'Ok',
-          type: 'success'
+      if(type === 0) { // insert emqx
+        const { username, password } = JSON.parse(conn);
+        addUser(username, password, () => {
+          db.query('INSERT INTO devices (name, type, conn, area, mac, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${mac}, ${remark})', {
+            name, type, conn, area, remark, mac: username
+          }).then(row => {
+            res.json({
+              code: 0,
+              message: 'Ok',
+              type: 'success'
+            });
+          }).catch(err => {
+            res.status(500).json({
+              code: -5,
+              message: err,
+              type: 'error'
+            });
+          });
         });
-      }).catch(err => {
-        res.status(500).json({
-          code: -5,
-          message: err,
-          type: 'error'
+      } else {
+        db.query('INSERT INTO devices (name, type, conn, area, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${remark})', {
+          name, type, conn, area, remark
+        }).then(row => {
+          res.json({
+            code: 0,
+            message: 'Ok',
+            type: 'success'
+          });
+        }).catch(err => {
+          res.status(500).json({
+            code: -5,
+            message: err,
+            type: 'error'
+          });
         });
-      });
+      }
     }
   });
 
   api.get('/getDeviceList', auth({ config, db }), (req, res) => {
     const { id, name, area, page, pageSize } = req.query;
-    db.query('SELECT "id", "mac", "name", "remark", "type", "area",' + ((req.jwt.user.roles[0].name === 'admin') ? '"conn", ' : '') + ' "createTime" FROM devices WHERE (id = ${id} OR ${id} IS NULL) AND (name ILIKE ${name}) AND (area = ${area} OR ${area} IS NULL) ORDER BY id ASC LIMIT ${limit} OFFSET ${offset}', {
+    db.query('SELECT "id", "mac", "name", "remark", "type", "area",' + ((req.jwt.user.roles[0].name === 'admin') ? '"conn", ' : '') + ' "createTime" FROM devices WHERE (id = ${id} OR ${id} IS NULL) AND (name ILIKE ${name}) AND (area = ${area} OR ${area} IS NULL)' + ((req.jwt.user.roles[0].name === 'admin') ? '' : ' AND id = ANY(ARRAY[${permission}])') + ' ORDER BY id ASC LIMIT ${limit} OFFSET ${offset}', {
       id: id || null,
+      permission: req.jwt?.user?.roles[0]?.permission || '',
       area: area || null,
       name: name ? `%${name}%` : '%',
       limit:  pageSize,
@@ -138,11 +225,11 @@ export default ({ config, db }) => {
 
   api.get('/getDeviceDetail', auth({ config, db }), (req, res) => {
     const { id } = req.query;
-    if(id) {
-      db.query('SELECT * FROM devices WHERE id = ${id}', { id }).then(row => {
+    if(id && (req.jwt.user.roles[0].name === 'admin' || req.jwt?.user?.roles[0]?.permission?.includes(~~id))) {
+      db.query('SELECT type, var, action FROM devices WHERE id = ${id}', { id }).then(row => {
         res.json({
           code: 0,
-          result: { var: row[0].var, action: row[0].action },
+          result: row[0],
           message: 'Ok',
           type: 'success'
         });
@@ -160,7 +247,6 @@ export default ({ config, db }) => {
         type: 'error'
       });
     }
-    
   });
 
   api.get('/getAreaList', auth({ config, db }), (req, res) => {

@@ -146,5 +146,59 @@ export default ({ config, db }) => {
     }
   });
 
+  api.get('/getMenuList', auth({ config, db }), admin({ config, db }), (req, res) => {
+    db.query('SELECT * FROM devices ORDER BY id ASC').then(row => {
+      const menuList = [];
+      for(let i of row) {
+        menuList.push({
+          id: i.id,
+          icon: 'ion:document',
+          type: 1,
+          menuName: `${i.id}: ${i.name}`,
+          createTime: i.createTime,
+          status: 1
+        });
+      }
+      res.json({
+        code: 0,
+        result: menuList,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
+  api.post('/setRoleInfo', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { name, remark, permission } = req.body;
+    console.log(req.body);
+    db.query('SELECT * FROM roles WHERE name = ${name}', { name }).then(row => {
+      if(row.length === 0) {
+        db.query('INSERT INTO roles (name, remark, permission) VALUES (${name}, ${remark}, ${permission})', { name, remark, permission: JSON.stringify(permission) }).then(row => {
+          res.json({
+            code: 0,
+            message: 'Ok',
+            type: 'success'
+          });
+        }).catch(err => {
+          console.error(err);
+        });
+      } else {
+        db.query('UPDATE roles SET remark = ${remark}, permission = ${permission} WHERE name = ${name}', { name, remark, permission: JSON.stringify(permission) }).then(row => {
+          res.json({
+            code: 0,
+            message: 'Ok',
+            type: 'success'
+          });
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
   return api;
 }
