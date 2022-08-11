@@ -4,7 +4,7 @@ import admin from '../middleware/admin';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
-export default ({ config, db }) => {
+export default ({ config, db, subscribe, publish }) => {
   const api = Router();
 
   const addUser = (username, password, callback) => {
@@ -242,9 +242,9 @@ export default ({ config, db }) => {
         });
       });
     } else {
-      res.status(400).json({
+      res.status(403).json({
         code: -4,
-        message: 'Bad request',
+        message: 'No permission',
         type: 'error'
       });
     }
@@ -284,6 +284,24 @@ export default ({ config, db }) => {
       message: 'Ok',
       type: 'success'
     });
+  });
+
+  api.post('/sendMQCmd', auth({ config, db }), (req, res) => {
+    const { id, cmd } = req.body;
+    if(id && (req.jwt.user.roles[0].name === 'admin' || req.jwt?.user?.roles[0]?.permission?.includes(~~id))) {
+      publish(`control/${id}`, JSON.stringify({ cmd }));
+      res.json({
+        code: 0,
+        message: 'Ok',
+        type: 'success'
+      });
+    } else {
+      res.status(403).json({
+        code: -4,
+        message: 'No permission',
+        type: 'error'
+      });
+    }
   });
 
   return api;

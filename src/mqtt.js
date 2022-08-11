@@ -1,4 +1,4 @@
-import { connect } from "mqtt"
+import { connect } from 'mqtt';
 
 export default ({ config, db }, callback) => {
   const client = connect({
@@ -10,7 +10,7 @@ export default ({ config, db }, callback) => {
 
   const subscribe = (topic) => {
     client.subscribe(topic, { qos: 2 }, (err) => {
-      if(err) {
+      if (err) {
         console.error(err);
       }
     });
@@ -48,5 +48,5 @@ export default ({ config, db }, callback) => {
     }
   });
 
-  callback(client);
+  callback({ subscribe, publish });
 }

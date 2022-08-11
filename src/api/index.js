@@ -5,7 +5,7 @@ import sys from './sys';
 import user from './user';
 import device from './device';
 
-export default ({ config, db }) => {
+export default ({ config, db, subscribe, publish }) => {
   const api = Router();
 
   // // mount the facets resource
@@ -16,9 +16,9 @@ export default ({ config, db }) => {
     res.json({ version });
   });
 
-	api.use('/sys', sys({ config, db }));
-  api.use('/user', user({ config, db }));
-  api.use('/device', device({ config, db }));
+	api.use('/sys', sys({ config, db, subscribe, publish }));
+  api.use('/user', user({ config, db, subscribe, publish }));
+  api.use('/device', device({ config, db, subscribe, publish }));
 
   return api;
 }

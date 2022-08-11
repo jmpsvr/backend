@@ -17,14 +17,13 @@ app.use(express.json({ type: '*/json' }));
 app.use(express.urlencoded({ extended: false }));
 
 initializeDb(config.postgres, (db) => {
-  app.use(middleware);
-  app.use('/api', api({ config, db }));
-  
-  app.server.listen(process.env.PORT || config.port, () => {
-    console.log(`Started on port ${app.server.address().port}`);
-  });
-  startMQTT({ config, db }, (client) => {
-    console.log(`MQTT started`);
+  startMQTT({ config, db }, ({ subscribe, publish }) => {
+    app.use(middleware);
+    app.use('/api', api({ config, db, subscribe, publish }));
+    
+    app.server.listen(process.env.PORT || config.port, () => {
+      console.log(`Started on port ${app.server.address().port}`);
+    });
   });
 });
 
