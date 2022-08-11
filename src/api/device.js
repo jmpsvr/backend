@@ -195,7 +195,7 @@ export default ({ config, db }) => {
     const permission = req.jwt?.user?.roles[0]?.permission;
     db.query('SELECT "id", "mac", "name", "remark", "type", "area",' + ((req.jwt.user.roles[0].name === 'admin') ? '"conn", ' : '') + ' "createTime" FROM devices WHERE (id = ${id} OR ${id} IS NULL) AND (name ILIKE ${name}) AND (area = ${area} OR ${area} IS NULL)' + ((req.jwt.user.roles[0].name === 'admin') ? '' : ' AND id = ANY(ARRAY[${permission}])') + ' ORDER BY id ASC LIMIT ${limit} OFFSET ${offset}', {
       id: id || null,
-      permission: permission.length > 0 ? permission : [ 0 ],
+      permission: permission?.length > 0 ? permission : [ 0 ],
       area: area || null,
       name: name ? `%${name}%` : '%',
       limit:  pageSize,
