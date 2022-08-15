@@ -227,7 +227,7 @@ export default ({ config, db, subscribe, publish }) => {
   api.get('/getDeviceDetail', auth({ config, db }), (req, res) => {
     const { id } = req.query;
     if(id && (req.jwt.user.roles[0].name === 'admin' || req.jwt?.user?.roles[0]?.permission?.includes(~~id))) {
-      db.query('SELECT type, var, action FROM devices WHERE id = ${id}', { id }).then(row => {
+      db.query('SELECT name, type, remark, var, action FROM devices WHERE id = ${id}', { id }).then(row => {
         res.json({
           code: 0,
           result: row[0],
@@ -275,7 +275,7 @@ export default ({ config, db, subscribe, publish }) => {
       },
       {
         id: 1,
-        name: 'Onvif'
+        name: 'RTSP'
       }
     ];
     res.json({

@@ -32,12 +32,14 @@
     "axios": "^0.27.2",
     "compression": "^1.5.2",
     "express": "^4.13.3",
+    "express-ws": "^5.0.2",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^8.5.1",
     "morgan": "^1.8.0",
     "mqtt": "^4.3.7",
     "pg-promise": "^10.11.1",
     "resource-router-middleware": "^0.6.0",
+    "rtsp-relay": "^1.6.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
