@@ -304,5 +304,60 @@ export default ({ config, db, subscribe, publish }) => {
     }
   });
 
+  api.get('/getActionList', auth({ config, db }), (req, res) => {
+    db.query('SELECT * FROM actions ORDER BY id ASC').then(row => {
+      res.json({
+        code: 0,
+        result: row,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      res.status(500).json({
+        code: -5,
+        message: 'Cannot load data',
+        type: 'error'
+      });
+    });
+  });
+
+  api.post('/setActionInfo', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { name, condition, trigger, remark, id } = req.body;
+    const _condition = condition ? JSON.parse(condition) : null;
+    const _trigger = trigger ? JSON.parse(trigger): null;
+    if(id) {
+      db.query('UPDATE actions SET name = ${name}, condition = ${condition}, trigger = ${trigger}, remark = ${remark} WHERE id = ${id}', {
+        name,
+        condition: _condition ? JSON.stringify(_condition) : null,
+        trigger: _trigger ? JSON.stringify(_trigger): null,
+        remark,
+        id
+      }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    } else {
+      db.query('INSERT INTO actions (name, condition, trigger, remark) VALUES (${name}, ${condition}, ${trigger}, ${remark})', {
+        name,
+        condition: _condition ? JSON.stringify(_condition) : null,
+        trigger: _trigger ? JSON.stringify(_trigger): null,
+        remark
+      }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    }
+  });
+
   return api;
 }

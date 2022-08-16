@@ -5,9 +5,9 @@ import initializeDb from './db';
 import api from './api';
 import config from './config.json';
 import middleware from './middleware';
-import startMQTT from './mqtt';
-
 import expressWs from 'express-ws';
+
+import startMQTT from './mqtt';
 
 const app = express();
 app.server = http.createServer(app);
@@ -24,7 +24,7 @@ initializeDb(config.postgres, (db) => {
     app.use(middleware);
     app.use('/api', api({ config, db, subscribe, publish }));
     app.server.listen(process.env.PORT || config.port, () => {
-      console.log(`Started on port ${app.server.address().port}`);
+      console.log(`Started on 0.0.0.0:${app.server.address().port}`);
     });
   });
 });

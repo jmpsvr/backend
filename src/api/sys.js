@@ -70,5 +70,40 @@ export default ({ config, db }) => {
       type: 'success'
     });
   });
+
+  api.post('/changePassword', auth({ config, db }), (req, res) => {
+    const { passwordOld, passwordNew } = req.body;
+    const username = req.jwt.user.name;
+    db.query('SELECT * FROM users WHERE name = ${username}', { username }).then(row => {
+      if(row[0]?.password === passwordOld) {
+        db.query('UPDATE users SET password = ${passwordNew} WHERE id = ${id}', {
+          id: row[0].id, passwordNew
+        }).then(row => {
+          console.log(row);
+          res.json({
+            code: 0,
+            message: 'Ok',
+            type: 'success'
+          });
+        }).catch(err => {
+          console.error(err);
+          res.json({
+            code: -5,
+            message: err,
+            type: 'error'
+          });
+        });
+      } else {
+        res.status(403).json({
+          code: -3,
+          message: 'Invalid old password',
+          type: 'error'
+        });
+      }
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
   return api;
 }

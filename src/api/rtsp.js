@@ -18,7 +18,7 @@ export default ({ config, db }) => {
       </script>
     `);
   });
-  const { proxy, scriptUrl } = rtsp(api);
+  const { proxy } = rtsp(api);
 
   // the endpoint our RTSP uses
   api.ws('/stream/:id', (ws, req) => {
@@ -32,7 +32,6 @@ export default ({ config, db }) => {
           if(type === 1) { // RTSP
             return proxy({
               url: JSON.parse(conn)?.rtsp,
-              // if your RTSP stream need credentials, include them in the URL as above
               verbose: false,
             })(ws);
           }

@@ -9,7 +9,8 @@
     "init": "node dist/init.js",
     "start": "node dist",
     "prestart": "npm run -s build",
-    "test": "eslint src"
+    "test": "eslint src",
+    "clean": "nodemon clean exit"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
