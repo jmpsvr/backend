@@ -304,7 +304,7 @@ export default ({ config, db, subscribe, publish }) => {
     }
   });
 
-  api.get('/getActionList', auth({ config, db }), (req, res) => {
+  api.get('/getActionList', auth({ config, db }), admin({ config, db }), (req, res) => {
     db.query('SELECT * FROM actions ORDER BY id ASC').then(row => {
       res.json({
         code: 0,
@@ -357,6 +357,23 @@ export default ({ config, db, subscribe, publish }) => {
         console.error(err);
       });
     }
+  });
+
+  api.get('/getNoticeList', auth({ config, db }), (req, res) => {
+    db.query('SELECT * FROM notices ORDER BY "createTime" DESC').then(row => {
+      res.json({
+        code: 0,
+        result: row,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      res.status(500).json({
+        code: -5,
+        message: 'Cannot load data',
+        type: 'error'
+      });
+    });
   });
 
   return api;

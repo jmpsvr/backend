@@ -105,5 +105,24 @@ export default ({ config, db }) => {
     });
   });
 
+  api.get('/getAnalysis', auth({ config, db }), (req, res) => {
+    db.query(`
+    WITH  u AS (SELECT COUNT(id) AS count FROM users),
+          d AS (SELECT COUNT(id) AS count FROM devices),
+          a AS (SELECT COUNT(id) AS count FROM actions),
+          n AS (SELECT COUNT(uuid) AS count FROM notices)
+    SELECT u.count AS user, d.count AS device, a.count AS action, n.count AS notice FROM u, d, a, n
+    `).then(row => {
+      res.json({
+        code: 0,
+        result: row[0],
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
   return api;
 }
