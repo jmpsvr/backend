@@ -1,14 +1,18 @@
-FROM alpine:3.4
+FROM alpine:latest
 
 # File Author / Maintainer
-LABEL authors="Zouhir Chahoud <zouhir@zouhir.org>"
+LABEL authors="JiJi <i@mmdjiji.com>"
+
+# Use tuna source
+# RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 
 # Update & install required packages
-RUN apk add --update nodejs bash git
+RUN apk update && apk add --update nodejs npm
 
 # Install app dependencies
 COPY package.json /www/package.json
-RUN cd /www; npm install
+RUN cd /www && npm install
+# --registry=https://registry.npmmirror.com
 
 # Copy app source
 COPY . /www
@@ -21,9 +25,6 @@ ENV PORT 8080
 
 # expose the port to outside world
 EXPOSE  8080
-
-# Run init
-RUN npm run init
 
 # start command as per package.json
 CMD ["npm", "start"]
