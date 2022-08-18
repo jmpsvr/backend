@@ -152,24 +152,32 @@ export default ({ config, db, subscribe, publish }) => {
       }
     } else { // insert
       if(type === 0) { // insert emqx
-        const { username, password } = JSON.parse(conn);
-        addUser(username, password, () => {
-          db.query('INSERT INTO devices (name, type, conn, area, mac, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${mac}, ${remark})', {
-            name, type, conn, area, remark, mac: username
-          }).then(row => {
-            res.json({
-              code: 0,
-              message: 'Ok',
-              type: 'success'
-            });
-          }).catch(err => {
-            res.status(500).json({
-              code: -5,
-              message: err,
-              type: 'error'
+        if(conn) {
+          const { username, password } = JSON.parse(conn);
+          addUser(username, password, () => {
+            db.query('INSERT INTO devices (name, type, conn, area, mac, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${mac}, ${remark})', {
+              name, type, conn, area, remark, mac: username
+            }).then(row => {
+              res.json({
+                code: 0,
+                message: 'Ok',
+                type: 'success'
+              });
+            }).catch(err => {
+              res.status(500).json({
+                code: -5,
+                message: err,
+                type: 'error'
+              });
             });
           });
-        });
+        } else {
+          res.status(400).json({
+            code: -4,
+            message: 'Bad request',
+            type: 'error'
+          });
+        }
       } else {
         db.query('INSERT INTO devices (name, type, conn, area, remark) VALUES (${name}, ${type}, ${conn}, ${area}, ${remark})', {
           name, type, conn, area, remark
@@ -373,6 +381,77 @@ export default ({ config, db, subscribe, publish }) => {
         message: 'Cannot load data',
         type: 'error'
       });
+    });
+  });
+
+  api.post('/deleteDevice', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { id } = req.body;
+    db.query('DELETE FROM devices WHERE id = ${id}', { id }).then(row => {
+      res.json({
+        code: 0,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
+  api.post('/setArea', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { name, remark, id } = req.body;
+    if(id) {
+      db.query('UPDATE areas SET name = ${name}, remark = ${remark} WHERE id = ${id}', {
+        name,
+        remark,
+        id
+      }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    } else {
+      db.query('INSERT INTO areas (name, remark) VALUES (${name}, ${remark})', {
+        name,
+        remark
+      }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    }
+  });
+
+  api.post('/deleteArea', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { id } = req.body;
+    db.query('DELETE FROM areas WHERE id = ${id}', { id }).then(row => {
+      res.json({
+        code: 0,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      console.error(err);
+    });
+  });
+
+  api.post('/deleteAction', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { id } = req.body;
+    db.query('DELETE FROM actions WHERE id = ${id}', { id }).then(row => {
+      res.json({
+        code: 0,
+        message: 'Ok',
+        type: 'success'
+      });
+    }).catch(err => {
+      console.error(err);
     });
   });
 

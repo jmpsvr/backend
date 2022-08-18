@@ -199,5 +199,48 @@ export default ({ config, db }) => {
     });
   });
 
+
+  api.post('/deleteUser', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { id } = req.body;
+    if(id == 1) {
+      res.status(403).json({
+        code: -1,
+        message: 'Admin user can not be deleted',
+        type: 'error'
+      });
+    } else {
+      db.query('DELETE FROM users WHERE id = ${id}', { id }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    }
+  });
+
+  api.post('/deleteRole', auth({ config, db }), admin({ config, db }), (req, res) => {
+    const { name } = req.body;
+    if(name == 'admin') {
+      res.status(403).json({
+        code: -1,
+        message: 'Admin role can not be deleted',
+        type: 'error'
+      });
+    } else {
+      db.query('DELETE FROM roles WHERE name = ${name}', { name }).then(row => {
+        res.json({
+          code: 0,
+          message: 'Ok',
+          type: 'success'
+        });
+      }).catch(err => {
+        console.error(err);
+      });
+    }
+  });
+
   return api;
 }
