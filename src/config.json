@@ -2,7 +2,7 @@
   "port": 8080,
   "bodyLimit": "100mb",
   "postgres": {
-    "host": "10.0.0.6",
+    "host": "db",
     "port": 5432,
     "user": "postgres",
     "password": "jmpsvr",
@@ -14,7 +14,7 @@
     "age": 86400
   },
   "emqx": {
-    "host": "10.0.0.6",
+    "host": "emqx",
     "tcp_port": 1883,
     "api_port": 18083,
     "username": "admin",
