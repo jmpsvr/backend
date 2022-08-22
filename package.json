@@ -7,7 +7,7 @@
     "dev": "nodemon -w src --exec babel-node --presets=@babel/preset-env -- src",
     "build": "babel src -s -D -d dist --presets=@babel/preset-env",
     "init": "node dist/init.js",
-    "start": "node dist",
+    "start": "npm run init && node dist",
     "prestart": "npm run -s build",
     "test": "eslint src",
     "clean": "nodemon clean exit"
