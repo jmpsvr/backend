@@ -4,7 +4,7 @@ import admin from '../middleware/admin';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
-export default ({ config, db, subscribe, publish }) => {
+export default ({ config, db, subscribe, publish, reload }) => {
   const api = Router();
 
   const addUser = (username, password, callback) => {
@@ -341,6 +341,7 @@ export default ({ config, db, subscribe, publish }) => {
         remark,
         id
       }).then(row => {
+        reload();
         res.json({
           code: 0,
           message: 'Ok',
@@ -356,6 +357,7 @@ export default ({ config, db, subscribe, publish }) => {
         trigger: _trigger ? JSON.stringify(_trigger): null,
         remark
       }).then(row => {
+        reload();
         res.json({
           code: 0,
           message: 'Ok',
@@ -445,6 +447,7 @@ export default ({ config, db, subscribe, publish }) => {
   api.post('/deleteAction', auth({ config, db }), admin({ config, db }), (req, res) => {
     const { id } = req.body;
     db.query('DELETE FROM actions WHERE id = ${id}', { id }).then(row => {
+      reload();
       res.json({
         code: 0,
         message: 'Ok',

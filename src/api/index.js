@@ -5,7 +5,7 @@ import user from './user';
 import device from './device';
 import rtsp from './rtsp';
 
-export default ({ config, db, subscribe, publish }) => {
+export default ({ config, db, subscribe, publish, reload }) => {
   const api = Router();
 
   // // mount the facets resource
@@ -18,9 +18,9 @@ export default ({ config, db, subscribe, publish }) => {
 
 	api.use('/sys', sys({ config, db, subscribe, publish }));
   api.use('/user', user({ config, db, subscribe, publish }));
-  api.use('/device', device({ config, db, subscribe, publish }));
+  api.use('/device', device({ config, db, subscribe, publish, reload }));
 
-  api.use('/rtsp', rtsp({ config, db}));
+  api.use('/rtsp', rtsp({ config, db }));
 
   return api;
 }

@@ -88,7 +88,7 @@ export default ({ config, db }, callback) => {
                 } else if(trigger.type === 'notice') {
                   db.query('INSERT INTO notices (event, did, icon, uuid) VALUES (${event}, ${did}, ${icon}, ${uuid})', {
                     event: trigger?.event,
-                    did: deviceId,
+                    did: trigger?.deviceId || deviceId,
                     icon: trigger?.icon,
                     uuid: uuidv4()
                   });
