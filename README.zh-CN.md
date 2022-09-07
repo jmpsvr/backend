@@ -5,9 +5,7 @@
   <br><br>
 </div>
 
-**English** | [中文](./README.zh-CN.md)
-
-Please goto [jmpsvr/jmpsvr](https://github.com/jmpsvr/jmpsvr).
+请移步 [jmpsvr/jmpsvr](https://github.com/jmpsvr/jmpsvr).
 
 ## License
 
