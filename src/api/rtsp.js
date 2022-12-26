@@ -13,7 +13,8 @@ export default ({ config, db }) => {
       <script>
         loadPlayer({
           url: 'ws://' + location.host + '/api/v1/rtsp/stream/${id}?jwt=${token}',
-          canvas: document.getElementById('canvas')
+          canvas: document.getElementById('canvas'),
+          videoBufferSize: 1024*1024*4
         });
       </script>
     `);
@@ -33,6 +34,18 @@ export default ({ config, db }) => {
             return proxy({
               url: JSON.parse(conn)?.rtsp,
               verbose: false,
+              additionalFlags: [
+                '-vcodec', 'mpeg1video',
+                '-s', '960x540',
+                '-b:v', '1000k',
+                '-r', '30',
+                '-bf', '0',
+                '-codec:a', 'mp2',
+                '-ar', '44100',
+                '-ac', '1',
+                '-b:a', '128k',
+                '-q', '1'
+              ]
             })(ws);
           }
         }).catch(err => {
