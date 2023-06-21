@@ -71,6 +71,20 @@ export default ({ config, db }) => {
     });
   });
 
+  api.post('/keepalive', auth({ config, db }), (req, res) => {
+    const token = jwt.sign({
+      user: req.jwt.user
+    }, config.jwt.secret, { expiresIn: config.jwt.age });
+    res.json({
+      code: 0,
+      result: {
+        token
+      },
+      message: 'Ok',
+      type: 'success'
+    });
+  });
+
   api.post('/changePassword', auth({ config, db }), (req, res) => {
     const { passwordOld, passwordNew } = req.body;
     const username = req.jwt.user.name;
